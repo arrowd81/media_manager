@@ -1,3 +1,9 @@
 SQLAlchemy
 requests
 beautifulsoup4
+fastapi
+uvicorn[standard]
+python-jose[cryptography]
+python-dotenv
+passlib[bcrypt]
+python-multipart

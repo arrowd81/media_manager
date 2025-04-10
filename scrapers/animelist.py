@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 from scrapers import Scraper
 from utils.request_utils import safe_request
 
-from settings import anime_list_proxy
+from config import anime_list_proxy
 
 
 class AnimeListScraper(Scraper):

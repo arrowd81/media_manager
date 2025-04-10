@@ -1,6 +1,6 @@
 from sqlalchemy import Column, String, Integer, ForeignKey
 
-from models import BaseDbClass
+from database import BaseDbClass
 
 
 class Media(BaseDbClass):

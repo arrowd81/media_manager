@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, create_engine
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
-from settings import RDBMS_URL
+from config import RDBMS_URL
 
 db_engine = create_engine(RDBMS_URL)
 session_maker = sessionmaker(db_engine)

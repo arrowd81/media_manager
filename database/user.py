@@ -1,12 +1,12 @@
 from sqlalchemy import Column, String, Integer, ForeignKey, Numeric
 
-from models import BaseDbClass
+from database import BaseDbClass
 
 
 class User(BaseDbClass):
     __tablename__ = 'user'
     username = Column(String, nullable=False)
-    password = Column(String, nullable=False)
+    hashed_password = Column(String)
 
 
 class UserMovie(BaseDbClass):
