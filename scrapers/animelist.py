@@ -2,10 +2,9 @@ import re
 
 from bs4 import BeautifulSoup
 
+from config import anime_list_proxy
 from scrapers import Scraper
 from utils.request_utils import safe_request
-
-from config import anime_list_proxy
 
 
 class AnimeListScraper(Scraper):
@@ -47,7 +46,6 @@ class AnimeListScraper(Scraper):
                 else:
                     out['eng_name'] = info.text.strip()[info.text.find(':') + 1:]
         return out
-
 
 
 if __name__ == '__main__':
