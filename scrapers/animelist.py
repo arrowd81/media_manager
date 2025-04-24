@@ -31,23 +31,49 @@ class AnimeListScraper(Scraper):
     def get_data(cls, site_id: str):
         response = safe_request('get', 'https://myanimelist.net/anime/' + site_id, proxies=anime_list_proxy)
         soup = BeautifulSoup(response.content, 'html.parser')
+        score_tag = soup.find('div', class_='fl-l score')
+        out = {
+            'name': soup.find('h1', class_='title-name h1_bold_none').text,
+            'score': float(score_tag.text),
+            'number_of_votes': int(re.sub(r'\D', '', score_tag['data-user'])),
+            'eng_name': '',
+            'Genres': [],
+            'Episodes': None,
+            'Premiered': '',
+            'Producers': [],
+            'Studios': [],
+        }
+
         info_list = soup.find_all('div', class_='spaceit_pad')
-        out = {'name': soup.find('h1', class_='title-name h1_bold_none').text,
-               'eng_name': '',
-               'score': float(soup.find('div', class_='fl-l score').text),
-               'Genres': []}
         for info in info_list:
             title = info.find('span', class_='dark_text')
-            if title is not None and title.text[:-1] in ['English', 'Genres', 'Genre']:
-                names = info.find_all('a')
-                if names:
-                    for i in names:
-                        out['Genres'].append(i.text)
-                else:
-                    out['eng_name'] = info.text.strip()[info.text.find(':') + 1:]
+            if title is not None:
+                match title.text[:-1]:
+                    case 'English':
+                        out['eng_name'] = info.text.strip()[info.text.find(':') + 1:]
+                    case 'Genres' | 'Genre':
+                        names = info.find_all('a')
+                        for i in names:
+                            out['Genres'].append(i.text)
+                    case 'Episodes':
+                        out['Episodes'] = int(info.text[info.text.find(':') + 1:].strip())
+                    case 'Premiered':
+                        out['Premiered'] = info.find('a').text
+                    case 'Producers':
+                        producers = info.find_all('a')
+                        for i in producers:
+                            out['Producers'].append(i.text)
+                    case 'Studios':
+                        studios = info.find_all('a')
+                        for i in studios:
+                            out['Studios'].append(i.text)
+                    case 'Source':
+                        out['Source'] = info.find('a').text.strip()
+
         return out
 
 
 if __name__ == '__main__':
     link = AnimeListScraper.find_link("Frieren beond")
-    print(AnimeListScraper.get_data(AnimeListScraper.get_site_id_from_link(link)))
+    out = AnimeListScraper.get_data(AnimeListScraper.get_site_id_from_link(link))
+    print(out)

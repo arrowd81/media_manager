@@ -32,7 +32,7 @@ def main(location):
             rating=media_data['score']
         )
         media.save()
-        if media_data['eng_name'] is not None and media_data['name'] is not None:
+        if media_data['eng_name']:
             MediaNames(name=media_data['name'], media_id=media.id).save()
         for genre in media_data['Genres']:
             MediaCategories(name=genre, media_id=media.id).save()
