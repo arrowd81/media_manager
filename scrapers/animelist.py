@@ -1,13 +1,46 @@
 import re
+from dataclasses import dataclass, field
 
 from bs4 import BeautifulSoup
 
 from config import anime_list_proxy
+from database.media import Seasons
 from scrapers import Scraper
 from utils.request_utils import safe_request
 
 
+@dataclass
+class AnimeListData:
+    name: str = None
+    score: float = None
+    number_of_votes: int = None
+    eng_name: str = None
+    genres: list[str] = field(default_factory=list)
+    number_of_episodes: int = None
+    premiered_season: Seasons = None
+    premiered_year: int = None
+    producers: list[str] = field(default_factory=list)
+    studios: list[str] = field(default_factory=list)
+    source: str = None
+
+    def assert_complete(self):
+        assert (
+                self.name
+                and self.score
+                and self.number_of_votes
+                and self.genres
+                and self.number_of_episodes
+                and self.premiered_season
+                and self.premiered_year
+                and self.producers
+                and self.studios
+                and self.source
+        )
+
+
 class AnimeListScraper(Scraper):
+    seasons_map = {"Spring": Seasons.SPRING, "Summer": Seasons.SUMMER, "Fall": Seasons.FALL, "Winter": Seasons.WINTER}
+
     @classmethod
     def find_link(cls, name: str, confirm=False):
         response = safe_request('get', 'https://myanimelist.net/search/all?q=' + name, proxies=anime_list_proxy)
@@ -32,17 +65,11 @@ class AnimeListScraper(Scraper):
         response = safe_request('get', 'https://myanimelist.net/anime/' + site_id, proxies=anime_list_proxy)
         soup = BeautifulSoup(response.content, 'html.parser')
         score_tag = soup.find('div', class_='fl-l score')
-        out = {
-            'name': soup.find('h1', class_='title-name h1_bold_none').text,
-            'score': float(score_tag.text),
-            'number_of_votes': int(re.sub(r'\D', '', score_tag['data-user'])),
-            'eng_name': '',
-            'Genres': [],
-            'Episodes': None,
-            'Premiered': '',
-            'Producers': [],
-            'Studios': [],
-        }
+        data = AnimeListData(
+            name=soup.find('h1', class_='title-name h1_bold_none').text,
+            score=float(score_tag.text),
+            number_of_votes=int(re.sub(r'\D', '', score_tag['data-user'])),
+        )
 
         info_list = soup.find_all('div', class_='spaceit_pad')
         for info in info_list:
@@ -50,27 +77,27 @@ class AnimeListScraper(Scraper):
             if title is not None:
                 match title.text[:-1]:
                     case 'English':
-                        out['eng_name'] = info.text.strip()[info.text.find(':') + 1:]
+                        data.eng_name = info.text.strip()[info.text.find(':') + 1:]
                     case 'Genres' | 'Genre':
                         names = info.find_all('a')
                         for i in names:
-                            out['Genres'].append(i.text)
+                            data.genres.append(i.text)
                     case 'Episodes':
-                        out['Episodes'] = int(info.text[info.text.find(':') + 1:].strip())
+                        data.number_of_episodes = int(info.text[info.text.find(':') + 1:].strip())
                     case 'Premiered':
-                        out['Premiered'] = info.find('a').text
+                        data.premiered_season, data.premiered_year = info.find('a').text.split()
                     case 'Producers':
                         producers = info.find_all('a')
                         for i in producers:
-                            out['Producers'].append(i.text)
+                            data.producers.append(i.text)
                     case 'Studios':
                         studios = info.find_all('a')
                         for i in studios:
-                            out['Studios'].append(i.text)
+                            data.studios.append(i.text)
                     case 'Source':
-                        out['Source'] = info.find('a').text.strip()
-
-        return out
+                        data.source = info.find('a').text.strip()
+        data.assert_complete()
+        return data
 
 
 if __name__ == '__main__':

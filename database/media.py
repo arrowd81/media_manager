@@ -1,6 +1,15 @@
-from sqlalchemy import Column, String, Integer, ForeignKey
+import enum
+
+from sqlalchemy import Column, String, Integer, ForeignKey, Enum
 
 from database import BaseDbClass
+
+
+class Seasons(enum.Enum):
+    SPRING = 0
+    SUMMER = 1
+    FALL = 2
+    WINTER = 3
 
 
 class Media(BaseDbClass):
@@ -12,7 +21,7 @@ class Media(BaseDbClass):
     data_url = Column(String, nullable=False)
     number_of_episodes = Column(Integer, nullable=False)
     premiered_year = Column(Integer, nullable=False)
-    premiered_season = Column(Integer, nullable=False)
+    premiered_season = Column(Enum(Seasons), nullable=False)
     source = Column(String, nullable=False)
 
 
