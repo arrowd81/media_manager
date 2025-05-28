@@ -1,5 +1,5 @@
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 
 from bs4 import BeautifulSoup
 
@@ -23,19 +23,17 @@ class AnimeListData:
     studios: list[str] = field(default_factory=list)
     source: str = None
 
-    def assert_complete(self):
-        assert (
-                self.name
-                and self.score
-                and self.number_of_votes
-                and self.genres
-                and self.number_of_episodes
-                and self.premiered_season
-                and self.premiered_year
-                and self.producers
-                and self.studios
-                and self.source
-        )
+    def check_and_complete(self):
+        for f in fields(self):
+            if not getattr(self, f.name):
+                value = input(f"unable to find {f.name} enter the value you want to enter (or nothing to set None):")
+                if value:
+                    if f.type == list[str]:
+                        getattr(self, f.name).append(value)
+                    elif f.type == Seasons:
+                        setattr(self, f.name, Seasons(int(value)))
+                    else:
+                        setattr(self, f.name, f.type(value))
 
 
 class AnimeListScraper(Scraper):
@@ -85,7 +83,8 @@ class AnimeListScraper(Scraper):
                     case 'Episodes':
                         data.number_of_episodes = int(info.text[info.text.find(':') + 1:].strip())
                     case 'Premiered':
-                        data.premiered_season, data.premiered_year = info.find('a').text.split()
+                        premiered_season, data.premiered_year = info.find('a').text.split()
+                        data.premiered_season = cls.seasons_map[premiered_season]
                     case 'Producers':
                         producers = info.find_all('a')
                         for i in producers:
@@ -95,8 +94,8 @@ class AnimeListScraper(Scraper):
                         for i in studios:
                             data.studios.append(i.text)
                     case 'Source':
-                        data.source = info.find('a').text.strip()
-        data.assert_complete()
+                        data.source = info.text.strip()[info.text.find(':') + 1:].strip()
+        data.check_and_complete()
         return data
 
 

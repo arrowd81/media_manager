@@ -1,4 +1,5 @@
 import os
+import traceback
 
 from database import db_session
 from database.media import Media, MediaNames, MediaCategories
@@ -23,7 +24,8 @@ def main(location):
             anime_link = AnimeListScraper.find_link(d["name"])
             media_data = AnimeListScraper.get_data(AnimeListScraper.get_site_id_from_link(anime_link))
         except Exception as e:
-            anime_link = input(f"Error getting data for {d['name']}\nError:{e}\nenter new anime link: ")
+            anime_link = input(
+                f"Error getting data for {d['name']}\nError:{e}\n{traceback.format_exc()}\nenter new anime link: ")
             media_data = AnimeListScraper.get_data(AnimeListScraper.get_site_id_from_link(anime_link))
         media = Media(
             main_name=media_data.eng_name or media_data.name,
@@ -32,6 +34,9 @@ def main(location):
             rating=media_data.score,
             number_of_votes=media_data.number_of_votes,
             number_of_episodes=media_data.number_of_episodes,
+            premiered_year=media_data.premiered_year,
+            premiered_season=media_data.premiered_season,
+            source=media_data.source,
         )
         media.save()
         if media_data.eng_name:
