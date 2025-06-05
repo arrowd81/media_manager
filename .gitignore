@@ -4,3 +4,5 @@
 .idea/
 test.sqlite
 .env
+frontend/pictures
+test.py
