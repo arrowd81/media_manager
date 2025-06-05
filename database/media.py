@@ -23,6 +23,7 @@ class Media(BaseDbClass):
     premiered_year = Column(Integer, nullable=False)
     premiered_season = Column(Enum(Seasons), nullable=False)
     source = Column(String, nullable=False)
+    image_path = Column(String, nullable=False)
 
 
 class MediaNames(BaseDbClass):

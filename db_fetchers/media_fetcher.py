@@ -1,9 +1,8 @@
 from datetime import date
 
-from sqlalchemy.orm.session import Session
 from sqlalchemy import select, or_, and_
+from sqlalchemy.orm.session import Session
 
-from database import session_maker
 from database.media import Media, Seasons
 from utils.date_utils import get_current_season
 
@@ -32,10 +31,10 @@ class MediaFetcherDB:
 
     def get_new_top_media(self):
         stmt = self._latest_anime(select(Media))
-        return self.db_session.execute(stmt).scalars().all()
-
-
-if __name__ == '__main__':
-    db = session_maker()
-    for media in MediaFetcherDB(db).get_new_top_media():
-        print(media.main_name)
+        top_new = self.db_session.execute(stmt.order_by(Media.rating)).scalars().all()
+        if len(top_new) <= 20:
+            new_count = 20 - len(top_new)
+            top_new += self.db_session.execute(
+                select(Media).order_by(Media.rating).limit(new_count)
+            ).scalars().all()
+        return top_new
